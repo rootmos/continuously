@@ -1,0 +1,17 @@
+name: Build
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out repository code
+      uses: actions/checkout@v4
+
+    - name: Install libgit2
+      run: sudo apt-get install --yes libgit2-dev
+
+    - name: Build
+      run: make build
