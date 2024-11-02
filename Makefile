@@ -10,7 +10,12 @@ EXTRA_CFLAGS ?= -DLOG_LEVEL=LOG_$(LOG_LEVEL)
 build: continuously
 
 continuously: continuously.c
-	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -o "$@" "$<" $(LDFLAGS)
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -o $@ $< $(LDFLAGS)
+
+DESTDIR ?= $(HOME)/.local/bin
+.PHONY: install
+install: build
+	install -t $(DESTDIR) continuously
 
 .PHONY: clean
 clean:
