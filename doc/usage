@@ -1,0 +1,24 @@
+# usage
+# 2024-11-02T11:20:37+01:00 SHA-256:8b5048cafe3ec01d2b87ec35a5220bd39aee597b0615c0c1a60e28a63b6ae84c
+# https://git.sr.ht/~rootmos/scripts 785b7c93a87efd5d46967546448677de460a42e6
+#!/bin/bash
+
+set -o nounset -o pipefail -o errexit
+
+EXE=$1
+OUTPUT=${2-/dev/stdout}
+
+TMP=$(mktemp)
+trap 'rm -f $TMP' EXIT
+
+python - "$EXE" <<EOF >> "$TMP"
+import sys
+import os
+import subprocess
+
+exe = sys.argv[1]
+name = os.path.basename(exe)
+subprocess.run([name, "-h"], executable=exe, check=True)
+EOF
+
+cp "$TMP" "$OUTPUT"
