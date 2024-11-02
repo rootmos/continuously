@@ -1,5 +1,5 @@
-// libr 0.5.0 (46bc9a44ec3019926e9b043a14e939d3e0a886fb) (https://github.com/rootmos/libr.git) (2024-11-02T08:38:28+01:00)
-// modules: fail logging now devnull nonblock
+// libr 0.5.0 (46bc9a44ec3019926e9b043a14e939d3e0a886fb) (https://github.com/rootmos/libr.git) (2024-11-02T09:01:41+01:00)
+// modules: fail logging now devnull nonblock util
 
 #ifndef LIBR_HEADER
 #define LIBR_HEADER
@@ -130,6 +130,28 @@ void LIBR(devnull2)(int fd, int flags);
 // libr: nonblock.h
 
 void LIBR(set_blocking)(int fd, int blocking);
+
+// libr: util.h
+
+#ifndef LENGTH
+#define LENGTH(xs) (sizeof(xs)/sizeof((xs)[0]))
+#endif
+
+#ifndef LIT
+#define LIT(x) x,sizeof(x)
+#endif
+
+#ifndef STR
+#define STR(x) x,strlen(x)
+#endif
+
+#ifndef MAX
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#endif
+
+#ifndef MIN
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#endif
 #endif // LIBR_HEADER
 
 #ifdef LIBR_IMPLEMENTATION

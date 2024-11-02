@@ -423,15 +423,26 @@ int main(int argc, const char* argv[])
 
         if(fds[0].revents & POLLIN) {
             handle_inotify(fds[0].fd);
+            fds[0].revents &= ~POLLIN;
         }
 
         if(fds[1].revents & POLLIN) {
             handle_signalfd(fds[1].fd);
+            fds[1].revents &= ~POLLIN;
         }
 
         if(state.input_fd >= 0) {
             if(fds[2].revents & POLLIN) {
                 handle_stdin(fds[2].fd);
+            }
+            fds[2].revents &= ~POLLIN;
+        }
+
+        for(size_t i = 0; i < LENGTH(fds); i++) {
+            if(fds[i].revents != 0) {
+                failwith("unhandled poll events: "
+                         "fds[%zu] = { .fd = %d, .revents = %hd }",
+                         i, fds[i].fd, fds[i].revents);
             }
         }
     }

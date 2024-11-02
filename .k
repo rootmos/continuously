@@ -1,3 +1,3 @@
 libr() {
-    "$HOME/git/libr/bundle" -o r.h fail logging devnull nonblock
+    "$HOME/git/libr/bundle" -o r.h fail logging devnull nonblock util
 }
