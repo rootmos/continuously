@@ -1,21 +1,15 @@
 #include <dirent.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <git2.h>
+#include <linux/limits.h>
 #include <poll.h>
-#include <signal.h>
-#include <stdio.h>
-#include <string.h>
 #include <sys/inotify.h>
 #include <sys/signalfd.h>
 #include <sys/wait.h>
-#include <unistd.h>
 #include <termios.h>
-#include <linux/limits.h>
 
 #define LIBR_IMPLEMENTATION
 #include "r.h"
 
+#include <git2.h>
 #define CHECK_GIT2(r, fmt, ...) do { \
     if(r != 0) { \
         const git_error* e = git_error_last(); \
@@ -49,7 +43,8 @@ struct watch {
 
 struct watch* ws = NULL;
 
-int watch(int fd, const char* path) {
+static int watch(int fd, const char* path)
+{
     int r = inotify_add_watch(fd, path, IN_MODIFY);
     if(r < 0 && errno == ENOENT) {
         warning("ignoring missing file: %s", path);
@@ -59,7 +54,8 @@ int watch(int fd, const char* path) {
     return r;
 }
 
-void add_file(int fd, const char* path) {
+static void add_file(int fd, const char* path)
+{
     int wd = watch(fd, path);
 
     struct watch** w = &ws;
@@ -76,7 +72,8 @@ void add_file(int fd, const char* path) {
     debug("watching file: %s", path);
 }
 
-void walk_dir(int fd, git_repository* repo, const char* root, const char* dir) {
+static void walk_dir(int fd, git_repository* repo, const char* root, const char* dir)
+{
     char path[PATH_MAX];
     int r = snprintf(path, sizeof(path), "%s%s", root, dir);
     if(r >= sizeof(path)) {
@@ -140,7 +137,8 @@ void walk_dir(int fd, git_repository* repo, const char* root, const char* dir) {
     }
 }
 
-void files(int fd, const char* path) {
+static void files(int fd, const char* path)
+{
     int r = git_libgit2_init();
     CHECK_GIT2(r < 0, "git_libgit2_init");
 
@@ -173,7 +171,8 @@ void files(int fd, const char* path) {
     walk_dir(fd, gr, wd, "");
 }
 
-void trigger_action(const char* type) {
+static void trigger_action(const char* type)
+{
     if(state.child != 0) {
         info("action triggered while child is still running");
         return;
@@ -218,7 +217,8 @@ void trigger_action(const char* type) {
     }
 }
 
-static void setup_term(int in, int out) {
+static void setup_term(int in, int out)
+{
     int r = tcgetattr(in, &state.ttyprev);
     if(r == -1 && errno == ENOTTY) {
         state.input_fd = -1;
@@ -245,14 +245,16 @@ static void setup_term(int in, int out) {
     }
 }
 
-static void restore_term(void) {
+static void restore_term(void)
+{
     if(state.input_fd < 0) return;
 
     int r = tcsetattr(state.input_fd, TCSANOW, &state.ttyprev);
     CHECK(r, "tcsetattr");
 }
 
-static void quit(const char* reason, int ec, int child_sig) {
+static void quit(const char* reason, int ec, int child_sig)
+{
     if(!state.quiet && state.output_fd >= 0) {
         dprintf(state.output_fd, "[quit]\n");
     }
@@ -275,7 +277,8 @@ static void quit(const char* reason, int ec, int child_sig) {
     exit(ec);
 }
 
-static void handle_inotify(int fd) {
+static void handle_inotify(int fd)
+{
     struct inotify_event e;
 
     ssize_t s = read(fd, &e, sizeof(e));
@@ -298,7 +301,8 @@ static void handle_inotify(int fd) {
     failwith("unexpected watch descriptor");
 }
 
-static void handle_signalfd(int fd) {
+static void handle_signalfd(int fd)
+{
     struct signalfd_siginfo si;
     ssize_t s = read(fd, &si, sizeof(si));
     CHECK_IF(s < 0, "read");
@@ -346,7 +350,8 @@ static void handle_signalfd(int fd) {
     }
 }
 
-static void handle_stdin(int fd) {
+static void handle_stdin(int fd)
+{
     char buf[128];
     ssize_t r = read(fd, buf, sizeof(buf));
     if(r == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
