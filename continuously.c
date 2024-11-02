@@ -5,6 +5,7 @@
 #include <sys/signalfd.h>
 #include <sys/wait.h>
 #include <termios.h>
+#include <unistd.h>
 
 #define LIBR_IMPLEMENTATION
 #include "r.h"
@@ -32,7 +33,7 @@ struct {
     int quiet;
 
     int action_argc;
-    const char** action_argv;
+    char** action_argv;
 } state;
 
 struct watch {
@@ -372,14 +373,41 @@ static void handle_stdin(int fd)
     handle_stdin(fd);
 }
 
-int main(int argc, const char* argv[])
+static void print_usage(int fd, const char* prog)
+{
+    dprintf(fd, "usage: %s [OPTION] [--] [COMMAND [ARG]...]\n", prog);
+    dprintf(fd, "\n");
+    dprintf(fd, "Run command when files change\n");
+    dprintf(fd, "\n");
+    dprintf(fd, "options:\n");
+    dprintf(fd, "  -h  show this text\n");
+    dprintf(fd, "  -q  keep quiet about event and state transitions\n");
+    dprintf(fd, "  --  stop processing arguments\n");
+}
+
+int main(int argc, char* argv[])
 {
     state.child = 0;
-
     state.quiet = 0;
 
-    state.action_argc = argc - 1;
-    state.action_argv = &argv[1];
+    int res;
+    while((res = getopt(argc, argv, "hq-")) != -1) {
+        switch(res) {
+        case 'q':
+            state.quiet = 1;
+            break;
+        case '-':
+            goto args_parsed;
+        case 'h':
+        default:
+            print_usage(res == 'h' ? 1 : 2, argv[0]);
+            exit(res == 'h' ? 0 : 1);
+        }
+    }
+
+args_parsed:
+    state.action_argc = argc - optind;
+    state.action_argv = &argv[optind];
 
     int ifd = inotify_init1(IN_NONBLOCK | IN_CLOEXEC);
     CHECK(ifd, "inotify_init1");
