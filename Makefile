@@ -1,7 +1,6 @@
 CC = gcc
 
-#CFLAGS = -Wall -Werror -O1
-CFLAGS = -O1
+CFLAGS = -Wall -Werror -O1
 LDFLAGS = -lgit2
 
 LOG_LEVEL ?= WARN

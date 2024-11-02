@@ -11,7 +11,7 @@
 
 #include <git2.h>
 #define CHECK_GIT2(r, fmt, ...) do { \
-    if(r != 0) { \
+    if((r) != 0) { \
         const git_error* e = git_error_last(); \
         if(e) { \
             failwith(fmt " (%d: %s)", ##__VA_ARGS__, e->klass, e->message); \
@@ -77,7 +77,7 @@ static void walk_dir(int fd, git_repository* repo, const char* root, const char*
     char path[PATH_MAX];
     int r = snprintf(path, sizeof(path), "%s%s", root, dir);
     if(r >= sizeof(path)) {
-        failwith("truncated path (%d): %s%s", sizeof(path), root, dir);
+        failwith("truncated path (%zu): %s%s", sizeof(path), root, dir);
     }
 
     DIR* d = opendir(path);
@@ -104,13 +104,13 @@ static void walk_dir(int fd, git_repository* repo, const char* root, const char*
             char rel[PATH_MAX];
             int r = snprintf(rel, sizeof(rel), "%s%s", dir, de->d_name);
             if(r >= sizeof(rel)) {
-                failwith("truncated path (%d): %s%s", sizeof(rel), dir, de->d_name);
+                failwith("truncated path (%zu): %s%s", sizeof(rel), dir, de->d_name);
             }
 
             char abs[PATH_MAX];
             r = snprintf(abs, sizeof(abs), "%s%s", root, rel);
             if(r >= sizeof(abs)) {
-                failwith("truncated path (%d): %s%s", sizeof(abs), root, rel);
+                failwith("truncated path (%zu): %s%s", sizeof(abs), root, rel);
             }
 
             if(strcmp(de->d_name, ".k") == 0) {
@@ -126,7 +126,7 @@ static void walk_dir(int fd, git_repository* repo, const char* root, const char*
             char rel[PATH_MAX];
             int r = snprintf(rel, sizeof(rel), "%s%s/", dir, de->d_name);
             if(r >= sizeof(rel)) {
-                failwith("truncated rel (%d): %s%s", sizeof(rel), dir, de->d_name);
+                failwith("truncated rel (%zu): %s%s", sizeof(rel), dir, de->d_name);
             }
 
             int i = 1;
@@ -162,7 +162,7 @@ static void files(int fd, const char* path)
         char fn[PATH_MAX];
         r = snprintf(fn, sizeof(fn), "%s%s", wd, e->path);
         if(r >= sizeof(fn)) {
-            failwith("truncated path (%d): %s%s", sizeof(fn), wd, e->path);
+            failwith("truncated path (%zu): %s%s", sizeof(fn), wd, e->path);
         }
 
         add_file(fd, fn);
@@ -194,7 +194,7 @@ static void trigger_action(const char* type)
         }
 
         int r = sigprocmask(SIG_UNBLOCK, &state.sm, NULL);
-        CHECK(r == 0, "sigprocmask");
+        CHECK_IF(r != 0, "sigprocmask");
 
         char** argv = calloc(1 + state.action_argc, sizeof(const char*));
         CHECK_MALLOC(argv);
@@ -263,7 +263,7 @@ static void quit(const char* reason, int ec, int child_sig)
         info("signalling running action (%d): %s",
              state.child, strsignal(child_sig));
         int r = kill(state.child, child_sig);
-        CHECK(r, "kill(%d, %s)", state.child, child_sig);
+        CHECK(r, "kill(%d, %s)", state.child, strsignal(child_sig));
     }
 
     restore_term();
