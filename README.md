@@ -26,6 +26,8 @@ go() {
 ```
 Thus whenever I [save a file](https://kinesis-ergo.com/foot-pedals/) something relevant gets built.
 
+![An example of my workflow](doc/workflow.gif)
+
 ## Usage
 ```
 usage: continuously [OPTION] [--] [COMMAND [ARG]...]
