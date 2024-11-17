@@ -375,7 +375,7 @@ static void handle_stdin(int fd)
 
 static void print_usage(int fd, const char* prog)
 {
-    dprintf(fd, "usage: %s [OPTION] [--] [COMMAND [ARG]...]\n", prog);
+    dprintf(fd, "usage: %s [OPTION] [--] COMMAND [ARG]...\n", prog);
     dprintf(fd, "\n");
     dprintf(fd, "Run command when files change\n");
     dprintf(fd, "\n");
@@ -406,6 +406,10 @@ int main(int argc, char* argv[])
     }
 
 args_parsed:
+    if(argc <= optind) {
+        print_usage(2, argv[0]);
+        return 1;
+    }
     state.action_argc = argc - optind;
     state.action_argv = &argv[optind];
 
