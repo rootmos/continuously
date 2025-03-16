@@ -272,7 +272,7 @@ static void quit(const char* reason, int ec, int child_sig)
     if(reason) {
         info("exiting (%s): %d", reason, ec);
     } else {
-        info("exiting: %s", reason);
+        info("exiting: %d", ec);
     }
 
     exit(ec);
@@ -280,17 +280,22 @@ static void quit(const char* reason, int ec, int child_sig)
 
 static void handle_inotify(int fd)
 {
-    struct inotify_event e;
+    char buf[sizeof(struct inotify_event) + NAME_MAX + 1];
+    struct inotify_event* e = (struct inotify_event*)buf;
 
-    ssize_t s = read(fd, &e, sizeof(e));
+    ssize_t s = read(fd, buf, sizeof(buf));
     CHECK_IF(s < 0, "read");
-    if(s != sizeof(e)) {
+    if(s < sizeof(*e) || s != sizeof(*e) + e->len) {
         failwith("unexpected partial read");
+    }
+
+    if(e->len) {
+        debug("inotify_event: name=%s", e->name);
     }
 
     struct watch* w = ws;
     while(w != NULL) {
-        if(w->wd == e.wd) {
+        if(w->wd == e->wd) {
             info("file trigger: %s", w->fn);
             trigger_action("file");
             w->wd = watch(fd, w->fn);
